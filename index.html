@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다항함수의 미분 퀴즈</title>
+    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX (수학 공식 렌더링) CDN - 'integrity' 속성 수정 --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzccM/21aLphIFEcIOUlpDbaJvGjjpKHMGl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURPlLJSytgoFAALEHhGDIHeocRh6zzEmJutTMEgVWGkXvKBSCKPR/a" crossorigin="anonymous"></script>
+    <style>
+        /* KaTeX 폰트가 정상적으로 로드되도록 Inter 폰트 설정 */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        #question-text {
+            word-break: keep-all; /* 한국어 단어 중간에 줄바꿈 방지 */
+            overflow-wrap: break-word; /* KaTeX 수식 등이 너무 길 경우 줄바꿈 */
+        }
+
+        /* 선택된 버튼 스타일 */
+        .option-btn.selected {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        /* 리뷰 시 정답 버튼 스타일 */
+        .option-btn.correct {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+            border-color: #22c55e;
+        }
+        /* 리뷰 시 오답 버튼 스타일 */
+        .option-btn.incorrect {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            border-color: #ef4444;
+        }
+
+        /* 결과 상세 영역 스크롤 가능하도록 */
+        #result-details {
+            max-height: calc(100vh - 300px); /* 뷰포트 높이에 따라 조절, 헤더/푸터 제외 */
+            overflow-y: auto;
+            padding-right: 10px; /* 스크롤바와 내용 겹치지 않게 */
+        }
+
+        /* 스크롤바 스타일링 (선택 사항) */
+        #result-details::-webkit-scrollbar {
+            width: 8px;
+        }
+        #result-details::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* gray-300 */
+            border-radius: 4px;
+        }
+        #result-details::-webkit-scrollbar-track {
+            background-color: #f1f5f9; /* gray-100 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div id="app-container" class="w-full max-w-3xl mx-auto">
+        <!-- 퀴즈 컨테이너 --><div id="quiz-container" class="bg-white p-6 sm:p-8 rounded-xl shadow-lg transition-all duration-300">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">다항함수의 미분 퀴즈</h1>
+            
+            <div id="quiz-header" class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-blue-600">진행도</span>
+                    <span id="progress-text" class="text-sm font-medium text-gray-600">문제 1 / 10</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <div id="question-card" class="mb-6">
+                <p id="question-text" class="text-lg sm:text-xl font-semibold text-gray-900 min-h-[6rem] py-4"></p>
+            </div>
+            
+            <div id="options-container" class="grid grid-cols-1 gap-4">
+                <!-- 옵션 버튼들은 JS로 생성됩니다 --></div>
+            
+            <div class="mt-8 flex justify-end">
+                <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    다음 문제
+                </button>
+            </div>
+        </div>
+
+        <!-- 결과 컨테이너 --><div id="result-container" class="bg-white p-6 sm:p-8 rounded-xl shadow-lg transition-all duration-300 hidden">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4">퀴즈 결과</h2>
+            <p id="score-text" class="text-xl sm:text-2xl font-semibold text-center text-blue-600 mb-8"></p>
+            
+            <div id="result-details" class="space-y-6">
+                <!-- 결과 상세 내용은 JS로 생성됩니다 --></div>
+
+            <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+                <button id="review-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg shadow transition-all duration-200">
+                    오답노트 / 복습하기
+                </button>
+                <button id="new-quiz-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-all duration-200">
+                    새로운 10문제 풀기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 전체 질문 은행 ---
+        const questionBank = [
+            {
+                question: "함수 $f(x) = 3x^2 - 4x + 1$에 대하여 $f'(1)$의 값은?",
+                options: ["-2", "0", "1", "2", "4"],
+                answer: 3,
+                solution: "$f'(x) = \\frac{d}{dx}(3x^2 - 4x + 1) = 6x - 4$입니다. <br> 따라서 $f'(1) = 6(1) - 4 = 2$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 - 2x$에 대하여 $\\lim_{h \\to 0} \\frac{f(2+h) - f(2)}{h}$의 값은?",
+                options: ["4", "6", "8", "10", "12"],
+                answer: 3,
+                solution: "미분계수의 정의에 의해 $\\lim_{h \\to 0} \\frac{f(2+h) - f(2)}{h} = f'(2)$입니다. <br> $f'(x) = 3x^2 - 2$이므로, $f'(2) = 3(2)^2 - 2 = 3(4) - 2 = 12 - 2 = 10$입니다."
+            },
+            {
+                question: "함수 $f(x) = (x^2 + 1)(2x - 1)$에 대하여 $f'(1)$의 값은?",
+                options: ["2", "3", "4", "5", "6"],
+                answer: 4,
+                solution: "곱의 미분법을 사용합니다. <br> $f'(x) = (x^2 + 1)'(2x - 1) + (x^2 + 1)(2x - 1)'$ <br> $f'(x) = (2x)(2x - 1) + (x^2 + 1)(2)$ <br> $f'(1) = (2 \cdot 1)(2 \cdot 1 - 1) + (1^2 + 1)(2) = (2)(1) + (2)(2) = 2 + 4 = 6$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 + ax + b$가 $x=1$에서 미분가능하고 $f(1)=2$, $f'(1)=5$일 때, $a+b$의 값은?",
+                options: ["1", "2", "3", "4", "5"],
+                answer: 0,
+                solution: "$f(1) = 1^3 + a(1) + b = 1 + a + b = 2$이므로 $a + b = 1$입니다. <br> $f'(x) = 3x^2 + a$이므로 $f'(1) = 3(1)^2 + a = 3 + a = 5$입니다. <br> 따라서 $a = 2$입니다. <br> $a+b=1$에 $a=2$를 대입하면 $2+b=1$, 즉 $b = -1$입니다. <br> $a+b = 2 + (-1) = 1$입니다."
+            },
+            {
+                question: "다항함수 $f(x)$에 대하여 $\\lim_{x \\to 1} \\frac{f(x) - f(1)}{x^2 - 1} = 3$일 때, $f'(1)$의 값은?",
+                options: ["1", "2", "3", "6", "9"],
+                answer: 3,
+                solution: "주어진 식을 변형하면 <br> $\\lim_{x \\to 1} \\frac{f(x) - f(1)}{(x - 1)(x + 1)} = \\lim_{x \\to 1} \\left( \\frac{f(x) - f(1)}{x - 1} \\cdot \\frac{1}{x + 1} \\right) = 3$입니다. <br> $\\lim_{x \\to 1} \\frac{f(x) - f(1)}{x - 1} = f'(1)$이고 $\\lim_{x \\to 1} \\frac{1}{x + 1} = \\frac{1}{2}$이므로, <br> $f'(1) \\cdot \\frac{1}{2} = 3$입니다. <br> 따라서 $f'(1) = 6$입니다."
+            },
+            {
+                question: "함수 $f(x) = 2x^3 - 3x^2 - 12x + 5$의 그래프 위의 점 $(1, -8)$에서의 접선의 방정식은?",
+                options: ["$y = -12x + 4$", "$y = -6x - 2$", "$y = 6x - 14$", "$y = 12x - 20$", "$y = -12x - 4$"],
+                answer: 0,
+                solution: "접선의 기울기는 $x=1$에서의 미분계수와 같습니다. <br> $f'(x) = 6x^2 - 6x - 12$ <br> $f'(1) = 6(1)^2 - 6(1) - 12 = 6 - 6 - 12 = -12$입니다. <br> 기울기가 -12이고 점 $(1, -8)$을 지나는 직선의 방정식은 <br> $y - (-8) = -12(x - 1)$ <br> $y + 8 = -12x + 12$ <br> $y = -12x + 4$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 + 3x^2 + k$가 $x=a$에서 극댓값, $x=b$에서 극솟값을 가질 때, $a+b$의 값은?",
+                options: ["-3", "-2", "-1", "0", "1"],
+                answer: 1,
+                solution: "극값을 갖는 $x$ 좌표는 $f'(x) = 0$의 근입니다. <br> $f'(x) = 3x^2 + 6x = 3x(x+2)$ <br> $f'(x) = 0$이 되는 $x$는 $x=0$ 또는 $x=-2$입니다. <br> $f'(x)$의 부호가 $x=-2$에서 +에서 -로 바뀌므로 $x=-2$에서 극댓값을 갖고, $x=0$에서 -에서 +로 바뀌므로 $x=0$에서 극솟값을 갖습니다. <br> 따라서 $a = -2$, $b = 0$ (또는 $a=0, b=-2$일 수 있지만 합은 동일) <br> $a + b = -2 + 0 = -2$입니다."
+            },
+            {
+                question: "함수 $f(x) = \\frac{1}{3}x^3 - x^2 - 3x + 1$이 감소하는 구간은?",
+                options: ["$(-3, 1)$", "$(-1, 3)$", "$(-\\infty, -3) \\cup (1, \\infty)$", "$(-\\infty, -1) \\cup (3, \\infty)$", "전체 실수"],
+                answer: 1,
+                solution: "함수가 감소하는 구간은 $f'(x) < 0$인 구간입니다. <br> $f'(x) = x^2 - 2x - 3 = (x-3)(x+1)$ <br> $f'(x) < 0$이려면 $(x-3)(x+1) < 0$이어야 합니다. <br> 따라서 $-1 < x < 3$입니다. <br> 이 구간은 $(-1, 3)$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^4 - 2x^2 + 5$에 대하여 $f'' (1)$의 값은?",
+                options: ["4", "6", "8", "10", "12"],
+                answer: 2,
+                solution: "이계도함수를 구합니다. <br> $f'(x) = 4x^3 - 4x$ <br> $f''(x) = 12x^2 - 4$ <br> 따라서 $f''(1) = 12(1)^2 - 4 = 12 - 4 = 8$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 - 3x$ 위의 점 $(0, 0)$에서의 접선과 $x$축 및 $y$축으로 둘러싸인 삼각형의 넓이는?",
+                options: ["0", "1/2", "3/2", "2", "정의되지 않음"],
+                answer: 0,
+                solution: "접선의 기울기를 구합니다. <br> $f'(x) = 3x^2 - 3$ <br> $f'(0) = 3(0)^2 - 3 = -3$ <br> 점 $(0, 0)$을 지나고 기울기가 -3인 접선의 방정식은 <br> $y - 0 = -3(x - 0)$, 즉 $y = -3x$입니다. <br> 이 직선은 원점 $(0, 0)$을 지납니다. <br> $x$축과의 교점은 $y=0$일 때이므로 $-3x = 0$, $x=0$입니다. <br> $y$축과의 교점은 $x=0$일 때이므로 $y = -3(0)$, $y=0$입니다. <br> 즉, 이 접선은 $x$축, $y$축과 원점에서만 만나므로 삼각형을 이루지 않습니다. 따라서 넓이는 0입니다."
+            },
+            {
+                question: "함수 $f(x) = x^2$ 위의 점 $(1, 1)$과 $(3, 9)$를 잇는 직선의 기울기와 같은 접선의 기울기를 갖는 점의 $x$좌표는?",
+                options: ["1", "1.5", "2", "2.5", "3"],
+                answer: 2,
+                solution: "두 점 $(1, 1)$과 $(3, 9)$를 잇는 직선의 기울기(평균변화율)는 <br> $\\frac{9 - 1}{3 - 1} = \\frac{8}{2} = 4$입니다. <br> $f(x) = x^2$의 도함수는 $f'(x) = 2x$입니다. <br> 접선의 기울기가 4가 되는 $x$를 찾아야 하므로 $f'(x) = 4$를 풉니다. <br> $2x = 4$ <br> $x = 2$입니다. (이는 평균값 정리의 예입니다.)"
+            },
+            {
+                question: "함수 $f(x) = -2x^3 + 6x + 1$의 극댓값은?",
+                options: ["-3", "1", "3", "5", "7"],
+                answer: 3,
+                solution: "$f'(x) = -6x^2 + 6 = -6(x^2 - 1) = -6(x-1)(x+1)$ <br> $f'(x) = 0$이 되는 $x$는 $x=1$ 또는 $x=-1$입니다. <br> $f'(x)$의 부호는 $x=-1$에서 -에서 +로 바뀌므로 $x=-1$에서 극솟값을 갖고, <br> $x=1$에서 +에서 -로 바뀌므로 $x=1$에서 극댓값을 갖습니다. <br> 따라서 극댓값은 $f(1) = -2(1)^3 + 6(1) + 1 = -2 + 6 + 1 = 5$입니다."
+            },
+            {
+                question: "다항함수 $f(x)$가 $\\lim_{x \\to 2} \\frac{f(x) - 3}{x - 2} = 4$를 만족시킬 때, $f(2) + f'(2)$의 값은?",
+                options: ["3", "4", "5", "7", "12"],
+                answer: 3,
+                solution: "극한값이 존재하고 분모가 0으로 수렴하므로, 분자도 0으로 수렴해야 합니다. <br> $\\lim_{x \\to 2} (f(x) - 3) = 0$, 즉 $f(2) - 3 = 0$이므로 $f(2) = 3$입니다. <br> 미분계수의 정의에 의해 $\\lim_{x \\to 2} \\frac{f(x) - f(2)}{x - 2} = f'(2)$입니다. <br> 주어진 식은 $\\lim_{x \\to 2} \\frac{f(x) - 3}{x - 2} = \\lim_{x \\to 2} \\frac{f(x) - f(2)}{x - 2} = f'(2) = 4$입니다. <br> 따라서 $f(2) + f'(2) = 3 + 4 = 7$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3$에 대하여 $x$의 값이 0에서 2까지 변할 때의 평균변화율과 $x=c$에서의 미분계수가 같을 때, $c$의 값은? (단, $0 < c < 2$)",
+                options: ["$1$", "$\\frac{2}{\\sqrt{3}}$", "$\\sqrt{2}$", "$\\frac{4}{3}$", "$\\sqrt{3}$"],
+                answer: 1,
+                solution: "$x$의 값이 0에서 2까지 변할 때의 평균변화율은 <br> $\\frac{f(2) - f(0)}{2 - 0} = \\frac{2^3 - 0^3}{2} = \\frac{8}{2} = 4$입니다. <br> $f'(x) = 3x^2$이므로 $x=c$에서의 미분계수는 $f'(c) = 3c^2$입니다. <br> $3c^2 = 4$이므로 $c^2 = \\frac{4}{3}$입니다. <br> $c = \\pm \\sqrt{\\frac{4}{3}} = \\pm \\frac{2}{\\sqrt{3}}$입니다. <br> $0 < c < 2$이므로 $c = \\frac{2}{\\sqrt{3}}$입니다."
+            },
+            {
+                question: "함수 $f(x) = x(x-1)(x-2)$의 $x=1$에서의 미분계수는?",
+                options: ["-2", "-1", "0", "1", "2"],
+                answer: 1,
+                solution: "함수를 전개하면 $f(x) = (x^2 - x)(x - 2) = x^3 - 2x^2 - x^2 + 2x = x^3 - 3x^2 + 2x$입니다. <br> $f'(x) = 3x^2 - 6x + 2$입니다. <br> $f'(1) = 3(1)^2 - 6(1) + 2 = 3 - 6 + 2 = -1$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 - 6x^2 + 9x + 2$에 대하여 닫힌 구간 $[0, 4]$에서의 최댓값은?",
+                options: ["2", "5", "6", "7", "8"],
+                answer: 2,
+                solution: "최댓값은 구간의 양 끝점 또는 구간 내의 극댓값에서 나옵니다. <br> $f'(x) = 3x^2 - 12x + 9 = 3(x^2 - 4x + 3) = 3(x-1)(x-3)$ <br> $f'(x) = 0$인 $x$는 $x=1, x=3$ (모두 구간 $[0, 4]$에 포함) <br> $x=1$에서 극대, $x=3$에서 극소입니다. <br> 함숫값을 비교합니다: <br> $f(0) = 2$ <br> $f(1) = 1 - 6 + 9 + 2 = 6$ (극댓값) <br> $f(3) = 27 - 54 + 27 + 2 = 2$ (극솟값) <br> $f(4) = 64 - 96 + 36 + 2 = 6$ <br> 이 중 가장 큰 값은 6입니다."
+            },
+            {
+                question: "함수 $f(x) = x|x-1|$의 $x=1$에서의 미분가능성에 대한 설명으로 옳은 것은?",
+                options: ["미분가능하고 미분계수는 0이다.", "미분가능하고 미분계수는 1이다.", "미분가능하지 않다.", "좌미분계수는 1, 우미분계수는 -1이다.", "함숫값이 정의되지 않는다."],
+                answer: 2,
+                solution: "$x \\ge 1$일 때 $f(x) = x(x-1) = x^2 - x$, $f'(x) = 2x - 1$이므로 우미분계수는 $f'(1) = 2(1) - 1 = 1$입니다. <br> $x < 1$일 때 $f(x) = -x(x-1) = -x^2 + x$, $f'(x) = -2x + 1$이므로 좌미분계수는 $f'(1) = -2(1) + 1 = -1$입니다. <br> 좌미분계수(-1)와 우미분계수(1)가 다르므로 $x=1$에서 미분가능하지 않습니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 - 3x^2 + k$의 극솟값이 1일 때, 상수 $k$의 값은?",
+                options: ["1", "2", "3", "4", "5"],
+                answer: 4,
+                solution: "$f'(x) = 3x^2 - 6x = 3x(x-2)$ <br> $f'(x) = 0$인 $x$는 $x=0, x=2$입니다. <br> $f'(x)$의 부호는 $x=0$에서 +에서 -로 바뀌므로 극댓값을 갖고, $x=2$에서 -에서 +로 바뀌므로 극솟값을 갖습니다. <br> 극솟값은 $f(2)$입니다. <br> $f(2) = (2)^3 - 3(2)^2 + k = 8 - 12 + k = -4 + k$ <br> 극솟값이 1이므로 $-4 + k = 1$입니다. <br> 따라서 $k = 5$입니다."
+            },
+            {
+                question: "모든 실수 $x$에 대하여 $f(x) = x^3 + kx^2 + 3x - 1$이 증가함수일 때, 상수 $k$의 최댓값은?",
+                options: ["-3", "-1", "1", "3", "9"],
+                answer: 3,
+                solution: "함수 $f(x)$가 모든 실수 $x$에 대하여 증가하려면 모든 $x$에 대하여 $f'(x) \\ge 0$이어야 합니다. <br> $f'(x) = 3x^2 + 2kx + 3$ <br> 이차함수 $f'(x)$가 항상 $0$보다 크거나 같으려면, 판별식 $D \\le 0$이어야 합니다. <br> $D/4 = (k)^2 - (3)(3) = k^2 - 9$ <br> $k^2 - 9 \\le 0$ <br> $(k-3)(k+3) \\le 0$ <br> 따라서 $-3 \\le k \\le 3$입니다. <br> $k$의 최댓값은 3입니다."
+            },
+            {
+                question: "방정식 $2x^3 - 3x^2 - 12x + k = 0$이 서로 다른 세 실근을 갖도록 하는 정수 $k$의 개수는?",
+                options: ["25", "26", "27", "28", "29"],
+                answer: 1,
+                solution: "$f(x) = 2x^3 - 3x^2 - 12x$라 하고, $y = f(x)$와 $y = -k$의 교점을 생각합니다. <br> $f'(x) = 6x^2 - 6x - 12 = 6(x^2 - x - 2) = 6(x-2)(x+1)$ <br> $f'(x) = 0$인 $x$는 $x=-1, x=2$입니다. <br> $x=-1$에서 극댓값 $f(-1) = 2(-1)^3 - 3(-1)^2 - 12(-1) = -2 - 3 + 12 = 7$ <br> $x=2$에서 극솟값 $f(2) = 2(2)^3 - 3(2)^2 - 12(2) = 16 - 12 - 24 = -20$ <br> 서로 다른 세 실근을 가지려면 $y=-k$가 극댓값과 극솟값 사이에 있어야 합니다. <br> (극솟값) < $-k$ < (극댓값) <br> $-20 < -k < 7$ <br> 양변에 -1을 곱하면 $20 > k > -7$, 즉 $-7 < k < 20$입니다. <br> 이를 만족하는 정수 $k$의 개수는 $20 - (-7) - 1 = 26$개입니다."
+            },
+            {
+                question: "수직선 위를 움직이는 점 P의 시각 $t$에서의 위치 $x(t) = t^3 - 6t^2 + 5$이다. 점 P의 속도가 0이 되는 시각은?",
+                options: ["$t=0$", "$t=1$", "$t=2$", "$t=3$", "$t=4$"],
+                answer: 4,
+                solution: "속도 $v(t)$는 위치 $x(t)$를 시각 $t$에 대해 미분한 값입니다. <br> $v(t) = x'(t) = 3t^2 - 12t$ <br> 속도가 0이 되는 시각을 찾으려면 $v(t) = 0$을 풉니다. <br> $3t^2 - 12t = 3t(t - 4) = 0$ <br> $t = 0$ 또는 $t = 4$입니다. <br> (보통 $t>0$을 묻지만, 여기서는 $t=4$가 보기에 있습니다.)"
+            },
+            {
+                question: "함수 $f(x) = 2x^2 - 1$에 대하여 $\\lim_{n \\to \\infty} n \\left\\{ f(1 + \\frac{2}{n}) - f(1) \\right\\}$의 값은?",
+                options: ["2", "4", "6", "8", "10"],
+                answer: 3,
+                solution: "$h = \\frac{2}{n}$로 치환하면 $n = \\frac{2}{h}$이고, $n \\to \\infty$일 때 $h \\to 0$입니다. <br> 주어진 식 = $\\lim_{h \\to 0} \\frac{2}{h} \\{ f(1 + h) - f(1) \\} = 2 \\lim_{h \\to 0} \\frac{f(1 + h) - f(1)}{h}$ <br> 이는 $2f'(1)$과 같습니다. <br> $f'(x) = 4x$이므로 $f'(1) = 4(1) = 4$입니다. <br> 따라서 구하는 값은 $2 \\times f'(1) = 2 \\times 4 = 8$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 + ax^2 + bx$가 $x=1$에서 극솟값 -1을 가질 때, $a - b$의 값은?",
+                options: ["-2", "-1", "0", "1", "2"],
+                answer: 2,
+                solution: "$x=1$에서 극값을 가지므로 $f'(1) = 0$입니다. <br> $x=1$에서의 함숫값이 -1이므로 $f(1) = -1$입니다. <br> $f'(x) = 3x^2 + 2ax + b$ <br> $f'(1) = 3 + 2a + b = 0 \Rightarrow 2a + b = -3$ (1) <br> $f(1) = 1 + a + b = -1 \Rightarrow a + b = -2$ (2) <br> (1)식에서 (2)식을 빼면 $(2a + b) - (a + b) = -3 - (-2)$ <br> $a = -1$ <br> (2)식에 대입하면 $-1 + b = -2 \Rightarrow b = -1$ <br> $f'(x) = 3x^2 - 2x - 1 = (3x+1)(x-1)$. $x=-1/3$에서 극대, $x=1$에서 극소. 조건을 만족합니다. <br> $a = -1, b = -1$이므로 $a - b = -1 - (-1) = 0$입니다."
+            },
+            {
+                question: "함수 $f(x) = 2x^3 - 9x^2 + 12x$의 극댓값과 극솟값의 합은?",
+                options: ["7", "8", "9", "10", "11"],
+                answer: 2,
+                solution: "$f'(x) = 6x^2 - 18x + 12 = 6(x^2 - 3x + 2) = 6(x-1)(x-2)$ <br> $f'(x) = 0$인 $x$는 $x=1, x=2$입니다. <br> $x=1$에서 극대, $x=2$에서 극소입니다. <br> 극댓값 $f(1) = 2(1)^3 - 9(1)^2 + 12(1) = 2 - 9 + 12 = 5$ <br> 극솟값 $f(2) = 2(2)^3 - 9(2)^2 + 12(2) = 16 - 36 + 24 = 4$ <br> 극댓값과 극솟값의 합은 $5 + 4 = 9$입니다."
+            },
+            {
+                question: "함수 $f(x) = x^3 - 3x$의 그래프 위의 점 $(2, 2)$에서의 접선이 $y$축과 만나는 점의 $y$좌표는?",
+                options: ["-16", "-8", "-4", "2", "9"],
+                answer: 0,
+                solution: "접선의 기울기는 $f'(2)$입니다. <br> $f'(x) = 3x^2 - 3$ <br> $f'(2) = 3(2)^2 - 3 = 12 - 3 = 9$ <br> 기울기가 9이고 점 $(2, 2)$를 지나는 접선의 방정식은 <br> $y - 2 = 9(x - 2)$ <br> $y - 2 = 9x - 18$ <br> $y = 9x - 16$ <br> 이 접선이 $y$축과 만나는 점은 $x=0$일 때이므로, <br> $y = 9(0) - 16 = -16$입니다."
+            }
+        ];
+
+        // --- 전역 변수 ---
+        let currentQuestions = []; // 현재 퀴즈의 10개 문제
+        let currentQuestionIndex = 0; // 현재 문제 번호
+        let userAnswers = []; // 사용자의 답
+        let score = 0; // 점수
+        let quizState = 'ongoing'; // 'ongoing', 'reviewing'
+
+        // --- DOM 요소 ---
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result-container');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreText = document.getElementById('score-text');
+        const resultDetails = document.getElementById('result-details');
+        const reviewBtn = document.getElementById('review-btn');
+        const newQuizBtn = document.getElementById('new-quiz-btn');
+
+        // --- 수학 공식 렌더링 설정 ---
+        const renderMath = () => {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    // KaTeX Auto-render Options: https://katex.org/docs/autorender.html
+                    // 'delimitERS' 오타 수정
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
+            } else {
+                console.warn("renderMathInElement is not defined. KaTeX might not be loaded.");
+            }
+        };
+
+        // --- 함수 ---
+
+        /**
+         * 퀴즈 시작 (초기화 및 첫 문제 표시)
+         */
+        function startQuiz() {
+            // 상태 초기화
+            currentQuestions = [];
+            currentQuestionIndex = 0;
+            userAnswers = new Array(10).fill(null);
+            score = 0;
+            quizState = 'ongoing';
+
+            // DOM 초기화
+            resultContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            resultDetails.innerHTML = '';
+            nextBtn.disabled = true; // 답을 선택해야 활성화
+
+            // 새로운 문제 10개 생성
+            generateNewQuestions();
+
+            // 첫 문제 표시
+            displayQuestion();
+        }
+
+        /**
+         * 문제 은행에서 10개 문제를 랜덤하게 섞어서 선택
+         */
+        function generateNewQuestions() {
+            // 문제 은행을 복사하고 섞기 (Fisher-Yates shuffle)
+            const shuffledBank = [...questionBank];
+            for (let i = shuffledBank.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledBank[i], shuffledBank[j]] = [shuffledBank[j], shuffledBank[i]];
+            }
+            // 10개 문제 선택
+            currentQuestions = shuffledBank.slice(0, 10);
+        }
+
+        /**
+         * 현재 문제와 옵션을 화면에 표시
+         */
+        function displayQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                showResults();
+                return;
+            }
+
+            const question = currentQuestions[currentQuestionIndex];
+            
+            // 질문 텍스트 업데이트
+            questionText.innerHTML = `<strong>Q${currentQuestionIndex + 1}.</strong> ${question.question}`;
+            
+            // 옵션 버튼 생성
+            optionsContainer.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.classList.add('option-btn', 'w-full', 'text-left', 'p-4', 'border', 'border-gray-300', 'rounded-lg', 'transition-all', 'duration-200', 'hover:bg-gray-100', 'hover:border-blue-500');
+                button.dataset.index = index;
+
+                // 이미 선택한 답이 있으면 'selected' 표시
+                if (userAnswers[currentQuestionIndex] === index) {
+                    button.classList.add('selected');
+                }
+
+                button.onclick = () => selectOption(index);
+                optionsContainer.appendChild(button);
+            });
+
+            // 진행도 업데이트
+            progressText.innerText = `문제 ${currentQuestionIndex + 1} / 10`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / 10) * 100}%`;
+
+            // 다음 버튼 텍스트 변경
+            if (currentQuestionIndex === 9) {
+                nextBtn.innerText = '결과 보기';
+            } else {
+                nextBtn.innerText = '다음 문제';
+            }
+            
+            // 답이 선택되었는지 확인하여 버튼 활성화
+            nextBtn.disabled = (userAnswers[currentQuestionIndex] === null);
+
+            // 수학 공식 렌더링
+            renderMath();
+        }
+
+        /**
+         * 옵션 선택 시
+         * @param {number} selectedIndex - 사용자가 선택한 옵션의 인덱스
+         */
+        function selectOption(selectedIndex) {
+            // 이미 결과 화면이면 선택 불가
+            if (quizState === 'reviewing') return;
+
+            // 사용자 답안 저장
+            userAnswers[currentQuestionIndex] = selectedIndex;
+
+            // 'selected' 클래스 관리
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (parseInt(btn.dataset.index) === selectedIndex) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // 다음 버튼 활성화
+            nextBtn.disabled = false;
+        }
+
+        /**
+         * 다음 문제로 이동 또는 결과 표시
+         */
+        function goToNextQuestion() {
+            // 마지막 문제가 아니면
+            if (currentQuestionIndex < 9) {
+                currentQuestionIndex++;
+                displayQuestion();
+            } 
+            // 마지막 문제이면
+            else {
+                showResults();
+            }
+        }
+
+        /**
+         * 퀴즈 결과를 계산하고 표시
+         */
+        function showResults() {
+            quizState = 'reviewing';
+            score = 0;
+            
+            // 점수 계산
+            for (let i = 0; i < currentQuestions.length; i++) {
+                if (userAnswers[i] === currentQuestions[i].answer) {
+                    score++;
+                }
+            }
+            
+            // 점수 표시
+            scoreText.innerText = `총 10문제 중 ${score}문제를 맞혔습니다! ( ${score * 10}점 )`;
+            
+            // 결과 상세 생성
+            resultDetails.innerHTML = '';
+            currentQuestions.forEach((q, i) => {
+                const userAnswerIndex = userAnswers[i];
+                const correctAnswerIndex = q.answer;
+                const isCorrect = (userAnswerIndex === correctAnswerIndex);
+                
+                let userAnswerText = '선택하지 않음';
+                if (userAnswerIndex !== null) {
+                    userAnswerText = q.options[userAnswerIndex];
+                }
+                const correctAnswerText = q.options[correctAnswerIndex];
+
+                const resultCard = document.createElement('div');
+                resultCard.classList.add('border', 'border-gray-200', 'p-4', 'rounded-lg');
+                
+                resultCard.innerHTML = `
+                    <p class="text-base font-semibold mb-3">Q${i + 1}. ${q.question}</p>
+                    <div class="space-y-2">
+                        <p class="text-sm">
+                            <span class="font-medium">선택한 답:</span> 
+                            <span class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-semibold">${userAnswerText}</span>
+                            ${isCorrect ? 
+                                '<span class="text-green-600 ml-2">(정답)</span>' : 
+                                `<span class="text-red-600 ml-2">(오답)</span>`
+                            }
+                        </p>
+                        ${!isCorrect ? 
+                            `<p class="text-sm"><span class="font-medium">정답:</span> <span class="text-green-600 font-semibold">${correctAnswerText}</span></p>` 
+                            : ''
+                        }
+                        <button class="solution-toggle-btn text-sm text-blue-600 hover:underline">풀이 보기</button>
+                        <div class="solution-content hidden text-sm bg-gray-50 p-3 rounded-md mt-2">
+                            ${q.solution}
+                        </div>
+                    </div>
+                `;
+                resultDetails.appendChild(resultCard);
+            });
+
+            // 풀이 보기/숨기기 이벤트 리스너 추가
+            document.querySelectorAll('.solution-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const solutionContent = btn.nextElementSibling;
+                    solutionContent.classList.toggle('hidden');
+                    btn.innerText = solutionContent.classList.contains('hidden') ? '풀이 보기' : '풀이 숨기기';
+                });
+            });
+
+            // 화면 전환
+            quizContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            // 수학 공식 렌더링
+            renderMath();
+        }
+
+        // --- 이벤트 리스너 ---
+        nextBtn.addEventListener('click', goToNextQuestion);
+        
+        // 새로운 퀴즈 시작
+        newQuizBtn.addEventListener('click', startQuiz);
+        
+        // 복습하기 (오답노트) 버튼 - 상세 내용 토글
+        reviewBtn.addEventListener('click', () => {
+            if (resultDetails.innerHTML === '') {
+                // 이 경우는 발생하면 안 되지만, 혹시 모를 경우를 대비
+                showResults();
+            }
+            // 상세 내용이 이미 표시되어 있으므로, 스크롤을 맨 위로 올리는 등의 동작을 추가할 수 있습니다.
+            // 여기서는 단순히 상세 내용을 보여주는 역할로 사용 (이미 showResults에서 생성됨)
+            // 간단하게 맨 위로 스크롤
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // --- 초기 실행 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // KaTeX 렌더링 함수가 로드되었는지 확인
+            // KaTeX 스크립트 로딩 비동기 문제 해결을 위해 setTimeout을 사용하지 않고
+            // renderMathInElement가 정의된 후에 실행되도록 구조화
+            startQuiz(); // 초기 퀴즈 시작
+        });
+    </script>
+</body>
+</html>
+
